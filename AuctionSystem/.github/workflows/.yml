@@ -3,10 +3,16 @@ name: Java CI/CD Multi-OS (JDK 17)
 on:
   push:
     branches: [ "main", "dev" ]
+    tags: 
+      - 'v*.*.*' # Chạy khi bạn push tag dạng v1.0.0, v2.1.0...
   pull_request:
     branches: [ "main", "dev" ]
 
+permissions:
+  contents: write # Cấp quyền ghi để tạo Release và upload file
+
 jobs:
+  # --- JOB 1: BUILD VÀ TEST (CI) ---
   build-and-test:
     strategy:
       matrix:
@@ -22,8 +28,8 @@ jobs:
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '17' # Đã chuyển từ 25 xuống 17
-        distribution: 'temurin' # Bản phân phối phổ biến và ổn định nhất cho JDK 17
+        java-version: '17'
+        distribution: 'temurin'
         cache: maven
 
     # Chỉ chạy Checkstyle trên máy Ubuntu để tiết kiệm thời gian
@@ -33,7 +39,7 @@ jobs:
 
     # Biên dịch và chạy Unit Test trên từng hệ điều hành
     - name: Build and Test with Maven
-      run: mvn clean test
+      run: mvn clean package
 
     # Báo cáo kết quả test lên giao diện GitHub (Chỉ chạy trên Ubuntu)
     - name: Publish Test Report
@@ -41,3 +47,54 @@ jobs:
       if: (success() || failure()) && matrix.os == 'ubuntu-latest'
       with:
         report_paths: '**/target/surefire-reports/TEST-*.xml'
+
+    # Lưu file JAR vào hệ thống Artifact của GitHub (Tải được trong mục Actions)
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: auction-app-${{ matrix.os }}
+        path: target/*.jar
+        retention-days: 5
+
+  # --- JOB 2: TẠO RELEASE VÀ UPLOAD FILE (CD) ---
+  # Job này chỉ chạy khi bạn push một TAG
+  release:
+    needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # Tạo bản Release trên GitHub
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Release ${{ github.ref_name }}"
+          body: |
+            ## Bản cập nhật Auction System mới
+            - Phiên bản: ${{ github.ref_name }}
+            - Được build tự động cho Windows, macOS và Ubuntu.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Tải các file JAR đã build từ Job 1 xuống để chuẩn bị upload lên Release
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-artifacts
+
+      # Đưa các file JAR vào trang Release
+      - name: Upload Binaries to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./all-artifacts/auction-app-windows-latest/*.jar
+            ./all-artifacts/auction-app-macos-latest/*.jar
+            ./all-artifacts/auction-app-ubuntu-latest/*.jar
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
