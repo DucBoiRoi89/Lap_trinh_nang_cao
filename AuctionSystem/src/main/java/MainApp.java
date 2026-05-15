@@ -1,4 +1,5 @@
 
+import config.AppConfig;
 import core.AuctionSocketClient;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -9,7 +10,7 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
  
-        AuctionSocketClient.getInstance().connect("10.227.75.45", 1234);
+        AuctionSocketClient.getInstance().connect(AppConfig.SERVER_IP, 1234);
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/Login.fxml"));
         Scene scene = new Scene(loader.load());
         
