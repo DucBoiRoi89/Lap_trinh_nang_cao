@@ -16,7 +16,6 @@ class Main{
         int a2 = scanner.nextInt();
         p1.sell(a1);
         p2.sell(a2);
-        System.out.println(name1);
         System.out.println(p1.calculateFinalPrice());
         System.out.println(p2.calculateFinalPrice());
         Product.updateTaxRate(0.08);
