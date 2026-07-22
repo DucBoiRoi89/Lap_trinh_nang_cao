@@ -8,9 +8,7 @@ public class SmartLight{
         this.brightness = brightness;
     }
     public SmartLight(String id, String name){
-        this.id = id;
-        this.name = name;
-        this.brightness = 50;
+        this(id, name, 50);
     }
     public void setBrightness(int brightness){
         this.brightness = brightness;
