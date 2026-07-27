@@ -20,7 +20,7 @@ class Main{
                 double workingHours = Double.parseDouble(beforeLines[0]);
                 double hourlyRate = Double.parseDouble(beforeLines[1]);
                 employees[i] = new PartTimeEmployee(name, workingHours, hourlyRate);
-            }
+            }   
         }
         for (int i = 0; i < n; i++){
             if (employees[i] instanceof FullTimeEmployee){
