@@ -1,5 +1,5 @@
 class Main{
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Animal a = new Dog();
         if (a instanceof Cat){
             Cat c = (Cat) a;
