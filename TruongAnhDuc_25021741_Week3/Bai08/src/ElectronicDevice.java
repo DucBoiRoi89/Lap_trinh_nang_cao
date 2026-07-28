@@ -1,0 +1,3 @@
+interface ElectronicDivece{
+    void turnOn();
+}
